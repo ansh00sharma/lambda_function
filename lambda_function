@@ -1,0 +1,123 @@
+###############################################################################################################################################3
+### THIS IS THROUGH API (GATEWAY HTTP REQUEST)
+import json
+import boto3
+from datetime import datetime
+# import jwt
+# import hashlib
+
+def lambda_handler(event, context):
+    try:
+        user_data = json.loads(event['body'])
+        user_email = user_data['email']
+        user_password = user_data['password']
+        # user_email = "lalalal"
+        # user_password = "passqwe"
+        
+        # Secret-key for tokenization
+        secret_key = "nobody's gonna know"
+        
+        # cached emails from db
+        db_users_list = ["ansh2@gmail.com","ansh3@gmail.com"]
+    
+        # Check if any credential is missing or not
+        if user_email is None or user_password is None:
+            return {
+                "statusCode": 400,
+                "body": json.dumps({"message": "Email or Password is empty!", "success": "false"})
+            }
+        else:
+            # Search in db whether email already exists or not
+            if user_email in db_users_list:
+                return {
+                    "statusCode": 200,
+                    "body": json.dumps({"message": "Email already registered, please SignIn!", "success": "false"})
+                }
+            # Register that email in the Db
+            else:
+                # Creating Db connection wtih table
+                db_connection = boto3.resource('dynamodb')
+                table = db_connection.Table('test_user_table')
+                
+                # # Hashing the password
+                # hash_object.update(user_password.encode())
+                # # Get the hex digest of the hash
+                # hash_password = hash_object.hexdigest()
+                hash_password = "hash_password"
+    
+                # Assign token to user for later authentication
+                token_payload = {
+                    "email_id": user_email,
+                    "password": hash_password,
+                    "createdAt": datetime.now().isoformat(),
+                }
+                # user_token = jwt.encode(token_payload, secret_key, algorithm="HS256")
+                user_token = "user_token"
+                
+                # Creating input object for Db
+                user_input_data = {
+                    "userId": 2,                            # incremental query
+                    "email_id": user_email,
+                    "password": hash_password,
+                    "createdAt": datetime.now().isoformat(),
+                    "token" : user_token
+                    
+                }
+                
+                # Inserting into Db
+                table.put_item(Item = user_input_data)
+                
+                
+            
+                # Returning a Json response
+                return {
+                    "statusCode": 200,
+                    "body": json.dumps({"message": "Email registered successfully, please SignIn!","user_data":user_input_data, "success": "true"})
+                }
+    except Exception as e:
+        print("error : ",str(e))
+        return {
+            "error" : str(e),
+            "statusCode": 200
+        }
+
+#######################################################################################################################################################################
+    ### THIS WAS FOR REST API
+    # if event['HTTP Method'] == 'POST':
+        # body = json.loads(event['body'])
+        # user_email = body.get('email', None)
+        # user_password = body.get('password', None)
+
+        # db_users_list = ["ansh2@gmail.com"]  # cached emails from db
+
+        # if user_email is None or user_password is None:
+        #     return {
+        #         "statusCode": 400,
+        #         "body": json.dumps({"message": "Email or Password is empty!", "success": "false"})
+        #     }
+        # else:
+        #     # Search in db whether email already exists or not
+        #     if user_email in db_users_list:
+        #         return {
+        #             "statusCode": 200,
+        #             "body": json.dumps({"message": "Email already registered, please SignIn!", "success": "false"})
+        #         }
+        #     # Register that email in the Db
+        #     else:
+                
+        #         # encrypt the password
+                
+        #         # Assign token to user for later authentication
+        #         return {
+        #             "statusCode": 200,
+        #             "body": json.dumps({"message": "Email registered successfully, please SignIn!", "success": "true"})
+                # }
+    # else:
+    #     return {
+    #         "statusCode": 400,
+    #         "body": json.dumps({"message": "Invalid HTTP method", "success": "false"})
+    #     }
+    
+    
+    
+    
