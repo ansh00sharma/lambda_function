@@ -2,6 +2,7 @@ import boto3
 from datetime import datetime
 import hashlib
 
+
 def lambda_handler(event, context):
     try:
         db_connection = boto3.resource('dynamodb')  # Creating Db connection wtih table
@@ -39,19 +40,23 @@ def lambda_handler(event, context):
                         "statusCode": 200,
                         "message": "User Logged In successfully !","success": "true"
                     }
+            
             else:
                 return {
                         "statusCode": 400,
                         "message": "User credential don't match  check email and password again ! ","success": "true"
                     }
+            
+            ### another case when someones try to login directly --> return should register first.
+
 
         def verify_password(entered_password, stored_hashed_password):
             entered_password_hashed = hashlib.sha256(entered_password.encode('utf-8')).hexdigest()
-            return entered_password_hashed == stored_hashed_password
+            return entered_password_hashed == stored_hashed_password   #bcrypt 
         
         user_email = event['user_email']
         user_password = event['user_password']
-        process = event['process']
+        process = event['process'] # register/login
         
         if user_email is None or user_password is None:
             return {
